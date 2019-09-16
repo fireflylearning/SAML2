@@ -15,7 +15,7 @@ namespace SAML2.Bindings.SignatureProviders
         protected override bool VerifySignatureIntern(RSACryptoServiceProvider key, byte[] data, byte[] signature)
         {
             var hash = new SHA512Managed().ComputeHash(data);
-            return ((RSACryptoServiceProvider)key).VerifyHash(hash, "SHA512", signature);
+            return key.VerifyHash(hash, "SHA512", signature);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace SAML2.Bindings.SignatureProviders
         {
             //https://stackoverflow.com/questions/3554882/difference-between-sha256cryptoserviceprovider-and-sha256managed
             var hash = new SHA256Managed().ComputeHash(data);
-            return ((RSACryptoServiceProvider)key).VerifyHash(hash, "SHA256", signature);
+            return key.VerifyHash(hash, "SHA256", signature);
         }
     }
 }

@@ -1,0 +1,23 @@
+﻿<?xml version="1.0"?>
+<md:EntityDescriptor entityID="https://developerdemo.isams.cloud/main/sso/saml2" ID="_18d3f1e5-f4c5-492d-b856-90cabb3ec94a" xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata">
+    <md:IDPSSODescriptor ID="_19a41bee-9b73-4e21-b258-82b63db2e2c9" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol" WantAuthnRequestsSigned="true">
+        <md:KeyDescriptor  use="signing">
+            <KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
+                <X509Data>
+                    <X509Certificate>MIIC7DCCAdSgAwIBAgIQTG/SskRUKLtH9r6WDcQuijANBgkqhkiG9w0BAQUFADAfMR0wGwYDVQQDExRhei13ZWIuRlRpc2Ftcy5sb2NhbDAeFw0xOTA3MzExMDA3MDlaFw0yMDA3MzEwMDAwMDBaMB8xHTAbBgNVBAMTFGF6LXdlYi5GVGlzYW1zLmxvY2FsMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwL+jj8vMJR+lwm1oBu7LHk5JiSWtcpjz6R9RGdps7BZzIMxkKQNwBOWvxVuoQSLUp/YceCytR5IAnLtyySOix1D7xXpfMI/rKVJC3IqUcfOcggkn3xGZiAZczK4X27kKUg1lHt0okfhXDdbc0JdtcO/Ts7xVhOzFtavg9MV8IMmld1gKWeN0zXL7G2Pcak1WfVxs6RTdoVltvOgiR0V2O3Mke+c/RD1LO0TKpzAdebvMDhlEfa+oxa9ECjsTcUSsNz6G3Tgu1UpGzuyxjKXKPe3/5F4PTs7SRsfHYOcLcyqIMb/K7ig/G2pVyFT5fQTD7Ff4/RiSUqXZjpdSLT6VpQIDAQABoyQwIjALBgNVHQ8EBAMCBDAwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDQYJKoZIhvcNAQEFBQADggEBAGmc5/DSb2LdYhb87Xj3ZJFH1iiaBFyi+BbPq1dy9lQJ1ibOzZC/wi0KfaOVCcbOjkbULOBMAvy1qC4gg6TYHS3PHn9shA18nUeeWD+Qcor7PEGIZnJrY/hgvw4id48svD+AXi8+yD+k0AeZbTZb50EAK2jNpLTBknO6LwprC8eq0n293vpv3OZPNxo4azbtiiR06ZiIslHtfQrkrcGDWnHEkTF+JoMmQBmBDX5raUZUp8CkXVZUDcO2uEBTF7UilIfreLTRmmDZb4R2nR/T4OW1xe2Ks8HKWund/s1XjLi1H+MDTw4Wv7eF3NnFfD+fPSfb/bT5GU0NZJT6hJf+GWg=</X509Certificate>
+                </X509Data>
+            </KeyInfo>
+        </md:KeyDescriptor>
+        <md:KeyDescriptor  use="encryption">
+            <KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
+                <X509Data>
+                    <X509Certificate>MIIC7DCCAdSgAwIBAgIQTG/SskRUKLtH9r6WDcQuijANBgkqhkiG9w0BAQUFADAfMR0wGwYDVQQDExRhei13ZWIuRlRpc2Ftcy5sb2NhbDAeFw0xOTA3MzExMDA3MDlaFw0yMDA3MzEwMDAwMDBaMB8xHTAbBgNVBAMTFGF6LXdlYi5GVGlzYW1zLmxvY2FsMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwL+jj8vMJR+lwm1oBu7LHk5JiSWtcpjz6R9RGdps7BZzIMxkKQNwBOWvxVuoQSLUp/YceCytR5IAnLtyySOix1D7xXpfMI/rKVJC3IqUcfOcggkn3xGZiAZczK4X27kKUg1lHt0okfhXDdbc0JdtcO/Ts7xVhOzFtavg9MV8IMmld1gKWeN0zXL7G2Pcak1WfVxs6RTdoVltvOgiR0V2O3Mke+c/RD1LO0TKpzAdebvMDhlEfa+oxa9ECjsTcUSsNz6G3Tgu1UpGzuyxjKXKPe3/5F4PTs7SRsfHYOcLcyqIMb/K7ig/G2pVyFT5fQTD7Ff4/RiSUqXZjpdSLT6VpQIDAQABoyQwIjALBgNVHQ8EBAMCBDAwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDQYJKoZIhvcNAQEFBQADggEBAGmc5/DSb2LdYhb87Xj3ZJFH1iiaBFyi+BbPq1dy9lQJ1ibOzZC/wi0KfaOVCcbOjkbULOBMAvy1qC4gg6TYHS3PHn9shA18nUeeWD+Qcor7PEGIZnJrY/hgvw4id48svD+AXi8+yD+k0AeZbTZb50EAK2jNpLTBknO6LwprC8eq0n293vpv3OZPNxo4azbtiiR06ZiIslHtfQrkrcGDWnHEkTF+JoMmQBmBDX5raUZUp8CkXVZUDcO2uEBTF7UilIfreLTRmmDZb4R2nR/T4OW1xe2Ks8HKWund/s1XjLi1H+MDTw4Wv7eF3NnFfD+fPSfb/bT5GU0NZJT6hJf+GWg=</X509Certificate>
+                </X509Data>
+            </KeyInfo>
+        </md:KeyDescriptor>
+        <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://developerdemo.isams.cloud/auth/saml/singlelogoutservice" />
+        <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://developerdemo.isams.cloud/auth/saml/singlelogoutservice" />
+        <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://developerdemo.isams.cloud/auth/saml/singlesignonservice" />
+        <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://developerdemo.isams.cloud/auth/saml/singlesignonservice" />
+    </md:IDPSSODescriptor>
+</md:EntityDescriptor>

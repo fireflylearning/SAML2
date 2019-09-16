@@ -322,6 +322,15 @@ namespace SAML2 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Key {0} was not found for endpoint {1}.
+        /// </summary>
+        internal static string KeyNotFound {
+            get {
+                return ResourceManager.GetString("KeyNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified metadata directory &quot;{0}&quot; could not be located.
         /// </summary>
         internal static string MetadataLocationNotFound {

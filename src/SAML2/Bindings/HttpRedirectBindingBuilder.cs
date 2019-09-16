@@ -32,7 +32,7 @@ namespace SAML2.Bindings
         /// </summary>
         private AsymmetricAlgorithm _signingKey;
 
-        private bool _isISams;
+
 
         /// <summary>
         /// Gets or sets the request.
@@ -49,7 +49,7 @@ namespace SAML2.Bindings
                 }
 
                 _request = value;
-                _isISams = value.Contains(".isams.");
+               
             }
         }
 
@@ -214,11 +214,6 @@ namespace SAML2.Bindings
             if (_signingKey is RSACryptoServiceProvider)
             {
                 var rsa = (RSACryptoServiceProvider)_signingKey;
-                if (_isISams)
-                {
-                    return rsa.SignData(data, new SHA256CryptoServiceProvider());
-                }
-
                 return rsa.SignData(data, new SHA1CryptoServiceProvider());
             } 
             else

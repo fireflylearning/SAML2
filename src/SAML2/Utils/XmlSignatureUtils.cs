@@ -26,7 +26,7 @@ namespace SAML2.Utils
         public static bool CheckSignature(XmlDocument doc)
         {
             CheckDocument(doc);
-            var signedXml = RetrieveSignature(doc);
+            var signedXml = RetrieveSignature(doc.DocumentElement);
 
             if (signedXml.SignatureMethod.Contains("rsa-sha256"))
             {
@@ -57,7 +57,7 @@ namespace SAML2.Utils
         public static bool CheckSignature(XmlDocument doc, AsymmetricAlgorithm alg)
         {
             CheckDocument(doc);
-            var signedXml = RetrieveSignature(doc);
+            var signedXml = RetrieveSignature(doc.DocumentElement);
 
             return signedXml.CheckSignature(alg);
         }
@@ -72,10 +72,9 @@ namespace SAML2.Utils
         /// <exception cref="InvalidOperationException">if the XmlDocument instance does not contain a signed XML element.</exception>
         public static bool CheckSignature(XmlElement el, AsymmetricAlgorithm alg)
         {
-            // CheckDocument(element);
-            var signedXml = RetrieveSignature(el);
+            var signature = RetrieveSignature(el);
 
-            var signed = signedXml.CheckSignature(alg);
+            var signed = signature.CheckSignature(alg);
 
             // CheckSignature may have failed due to a .NET bug when validating nodes with nested signatures
             // if the reference URI is canonicalized.  See: https://support.microsoft.com/en-us/kb/952697
@@ -86,8 +85,8 @@ namespace SAML2.Utils
                     // Search all of the signing nodes in the document for the one whose parent is
                     // the element we are interested in
                     XmlDocument doc = el.OwnerDocument;
-
                     XmlNodeList nodeList = doc.GetElementsByTagName(Schema.XmlDSig.Signature.ElementName, Saml20Constants.Xmldsig);
+
                     foreach (XmlElement element in nodeList)
                     {
                         if (element.ParentNode == el)
@@ -115,7 +114,7 @@ namespace SAML2.Utils
         public static bool CheckSignature(XmlDocument doc, KeyInfo keyinfo)
         {
             CheckDocument(doc);
-            var signedXml = RetrieveSignature(doc);            
+            var signedXml = RetrieveSignature(doc.DocumentElement);            
 
             AsymmetricAlgorithm alg = null;
             X509Certificate2 cert = null;
@@ -378,21 +377,10 @@ namespace SAML2.Utils
         /// <summary>
         /// Digs the &lt;Signature&gt; element out of the document.
         /// </summary>
-        /// <param name="doc">The doc.</param>
-        /// <returns>The <see cref="SignedXml"/>.</returns>
-        /// <exception cref="InvalidOperationException">if the document does not contain a signature.</exception>
-        private static SignedXml RetrieveSignature(XmlDocument doc)
-        {
-            return RetrieveSignature(doc.DocumentElement);
-        }
-
-        /// <summary>
-        /// Digs the &lt;Signature&gt; element out of the document.
-        /// </summary>
         /// <param name="el">The element.</param>
         /// <returns>The <see cref="SignedXml"/>.</returns>
         /// <exception cref="InvalidOperationException">if the document does not contain a signature.</exception>
-        private static SignedXml RetrieveSignature(XmlElement el)
+        internal static SignedXml RetrieveSignature(XmlElement el)
         {
             if (el.OwnerDocument.DocumentElement == null)
             {
@@ -405,20 +393,18 @@ namespace SAML2.Utils
             var nodeList = el.GetElementsByTagName(Schema.XmlDSig.Signature.ElementName, Saml20Constants.Xmldsig);
             if (nodeList.Count == 0)
             {
-                throw new InvalidOperationException("Document does not contain a signature to verify.");
+                throw new InvalidOperationException("Document does not contain a signature to verify." + "XmlElement: " + el.ToString());
             }
 
             signedXml.LoadXml((XmlElement)nodeList[0]);
 
             // To support SHA256 for XML signatures, an additional algorithm must be enabled.
-            // This is not supported in .Net versions older than 4.0. In older versions,
-            // an exception will be raised if an SHA256 signature method is attempted to be used.
             if (signedXml.SignatureMethod.Contains("rsa-sha256"))
             {
                 var addAlgorithmMethod = typeof(CryptoConfig).GetMethod("AddAlgorithm", BindingFlags.Public | BindingFlags.Static);
                 if (addAlgorithmMethod == null)
                 {
-                    throw new InvalidOperationException("This version of .Net does not support CryptoConfig.AddAlgorithm. Enabling sha256 not psosible.");
+                    throw new InvalidOperationException("This version of .Net (pre-4.0) does not support CryptoConfig.AddAlgorithm. Enabling sha256 not psosible.");
                 }
 
                 addAlgorithmMethod.Invoke(null, new object[] { typeof(RSAPKCS1SHA256SignatureDescription), new[] { signedXml.SignatureMethod } });

@@ -38,7 +38,7 @@ namespace SAML2.Tests
         }
 
         /// <summary>
-        /// Deserializes the test tokens using the Safewhere DK-SAML class.
+        /// Deserializes the test tokens using the Safe where DK-SAML class.
         /// </summary>
         /// <remarks>
         /// TODO: test data needs fixing
