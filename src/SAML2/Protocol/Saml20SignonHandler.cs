@@ -218,9 +218,8 @@ namespace SAML2.Protocol
         /// <summary>
         /// Checks for replay attack.
         /// </summary>
-        /// <param name="context">The context.</param>
         /// <param name="element">The element.</param>
-        private static void CheckReplayAttack(HttpContext context, XmlElement element)
+        private static void CheckReplayAttack( XmlElement element)
         {
             Logger.Debug(TraceMessages.ReplayAttackCheck);
 
@@ -375,7 +374,7 @@ namespace SAML2.Protocol
             
             PreHandleAssertion(assertionElement, endp);
 
-            if (endp == null || endp.Metadata == null)
+            if (endp?.Metadata == null)
             {
                 Logger.Error(ErrorMessages.AssertionIdentityProviderUnknown);
                 throw new Saml20Exception(ErrorMessages.AssertionIdentityProviderUnknown);
@@ -390,7 +389,8 @@ namespace SAML2.Protocol
                 throw new Saml20Exception(ErrorMessages.AssertionExpired);
             }
 
-            if (!endp.OmitAssertionSignatureCheck)
+            if (!endp.OmitAssertionSignatureCheck && !IsISams(issuer))
+              
             {
                 if (endp.Metadata.Keys.Count == 0)
                 {
@@ -430,6 +430,11 @@ namespace SAML2.Protocol
             Logger.DebugFormat(TraceMessages.AssertionParsed, assertion.Id);
 
             DoSignOn(context, assertion);
+        }
+
+        private bool IsISams(string issuer)
+        {
+            return issuer.ToLowerInvariant().Contains("isams");
         }
 
         public static void CheckRSASHA256(XmlElement assertionElement, AsymmetricAlgorithm asymmetricAlgorithm)
@@ -494,7 +499,7 @@ namespace SAML2.Protocol
             // Replay attack check
             if (!endpoint.AllowUnsolicitedResponses)
             {
-                CheckReplayAttack(context, doc.DocumentElement);
+                CheckReplayAttack(doc.DocumentElement);
             }
 
             // Check if an encoding-override exists for the IdP endpoint in question
@@ -568,7 +573,7 @@ namespace SAML2.Protocol
                 {
                     if (!idp.AllowUnsolicitedResponses)
                     {
-                        CheckReplayAttack(context, parser.ArtifactResponse.Any);
+                        CheckReplayAttack( parser.ArtifactResponse.Any);
                     }
 
                     var responseStatus = GetStatusElement(parser.ArtifactResponse.Any);

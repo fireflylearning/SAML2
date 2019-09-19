@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
+using System.Web;
 using System.Xml;
 using SAML2.Config;
 
@@ -92,7 +93,7 @@ namespace SAML2.Utils
                         if (element.ParentNode == el)
                         {
                             // Provide SignedXml.LoadXml with a Signature node whose OwnerDocument is the Signature's parent node. 
-                            XmlDocument tempDoc = new XmlDocument() { PreserveWhitespace = true, XmlResolver = null };
+                            XmlDocument tempDoc = new XmlDocument { PreserveWhitespace = true, XmlResolver = null };
                             tempDoc.LoadXml(element.ParentNode.OuterXml);
 
                             SignedXml sxml = new SignedXml(doc);
@@ -120,23 +121,20 @@ namespace SAML2.Utils
             X509Certificate2 cert = null;
             foreach (KeyInfoClause clause in keyinfo)
             {
-                if (clause is RSAKeyValue)
+                if (clause is RSAKeyValue rsaKeyValue)
                 {
-                    var key = (RSAKeyValue)clause;
-                    alg = key.Key;
+                    alg = rsaKeyValue.Key;
                     break;
                 }
                 
-                if (clause is KeyInfoX509Data)
+                if (clause is KeyInfoX509Data x509Data)
                 {
-                    var x509Data = (KeyInfoX509Data)clause;
                     var count = x509Data.Certificates.Count;
                     cert = (X509Certificate2)x509Data.Certificates[count - 1];                    
                 } 
-                else if (clause is DSAKeyValue)
+                else if (clause is DSAKeyValue dsaKeyValue)
                 {
-                    var key = (DSAKeyValue)clause;
-                    alg = key.Key;
+                    alg = dsaKeyValue.Key;
                     break;
                 }                
             }
@@ -151,22 +149,20 @@ namespace SAML2.Utils
 
         public static AsymmetricAlgorithm ExtractKey(KeyInfoClause keyInfoClause)
         {
-            if (keyInfoClause is RSAKeyValue)
+            if (keyInfoClause is RSAKeyValue rsaKeyValue)
             {
-                var key = (RSAKeyValue)keyInfoClause;
-                return key.Key;                
+                return rsaKeyValue.Key;                
             }
             
-            if (keyInfoClause is KeyInfoX509Data)
+            if (keyInfoClause is KeyInfoX509Data infoX509Data)
             {
-                var cert = GetCertificateFromKeyInfo((KeyInfoX509Data)keyInfoClause);
-                return cert != null ? cert.PublicKey.Key : null;
+                var cert = GetCertificateFromKeyInfo(infoX509Data);
+                return cert?.PublicKey.Key;
             }
             
-            if (keyInfoClause is DSAKeyValue)
+            if (keyInfoClause is DSAKeyValue dsaKeyValue)
             {
-                var key = (DSAKeyValue)keyInfoClause;
-                return key.Key;                
+                return dsaKeyValue.Key;                
             }
 
             return null;
@@ -297,10 +293,7 @@ namespace SAML2.Utils
 
                 // doc.DocumentElement.InsertAfter(doc.ImportNode(signedXml.GetXml(), true), nodes[0]);
                 var parentNode = nodes[0].ParentNode;
-                if (parentNode != null)
-                {
-                    parentNode.InsertAfter(doc.ImportNode(signedXml.GetXml(), true), nodes[0]);
-                }
+                parentNode?.InsertAfter(doc.ImportNode(signedXml.GetXml(), true), nodes[0]);
             }
         }
 
@@ -382,9 +375,9 @@ namespace SAML2.Utils
         /// <exception cref="InvalidOperationException">if the document does not contain a signature.</exception>
         internal static SignedXml RetrieveSignature(XmlElement el)
         {
-            if (el.OwnerDocument.DocumentElement == null)
+            if (el.OwnerDocument != null && el.OwnerDocument.DocumentElement == null)
             {
-                var doc = new XmlDocument() { PreserveWhitespace = true };
+                var doc = new XmlDocument { PreserveWhitespace = true };
                 doc.LoadXml(el.OuterXml);
                 el = doc.DocumentElement;
             }
@@ -393,7 +386,7 @@ namespace SAML2.Utils
             var nodeList = el.GetElementsByTagName(Schema.XmlDSig.Signature.ElementName, Saml20Constants.Xmldsig);
             if (nodeList.Count == 0)
             {
-                throw new InvalidOperationException("Document does not contain a signature to verify." + "XmlElement: " + el.ToString());
+                throw new InvalidOperationException("Document does not contain a signature to verify." + " XmlElement: " + HttpUtility.HtmlEncode(el.OuterXml));
             }
 
             signedXml.LoadXml((XmlElement)nodeList[0]);
@@ -523,21 +516,21 @@ namespace SAML2.Utils
                 {
                     var nl = document.GetElementsByTagName("*");
                     var enumerator = nl.GetEnumerator();
-                    while (enumerator != null && enumerator.MoveNext())
+                    while (enumerator.MoveNext())
                     {
                         var node = (XmlNode)enumerator.Current;
-                        if (node == null || node.Attributes == null)
+                        if (node?.Attributes == null)
                         {
                             continue;
                         }
 
                         var nodeEnum = node.Attributes.GetEnumerator();
-                        while (nodeEnum != null && nodeEnum.MoveNext())
+                        while (nodeEnum.MoveNext())
                         {
                             var attr = (XmlAttribute)nodeEnum.Current;
-                            if (attr != null && (attr.LocalName.ToLower() == "id" && attr.Value == idValue && node is XmlElement))
+                            if (attr != null && (attr.LocalName.ToLower() == "id" && attr.Value == idValue && node is XmlElement element))
                             {
-                                return (XmlElement)node;
+                                return element;
                             }
                         }
                     }
