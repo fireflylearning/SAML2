@@ -37,8 +37,7 @@ namespace SAML2.Bindings
             var shaHashingAlgorithm = SignatureProviderFactory.ValidateShaHashingAlgorithm(Saml2Config.GetConfig().MetaDataShaHashingAlgorithm);
             var signatureProvider = SignatureProviderFactory.CreateFromShaHashingAlgorithmName(shaHashingAlgorithm);
             signatureProvider.SignAssertion(doc, request.Request.Id, signingCertificate);
-          
-
+            
             //XmlSignatureUtils.SignDocument(doc, request.Request.Id);
             ArtifactRedirect(destination, index, doc, Context.Request.Params["relayState"]);
         }

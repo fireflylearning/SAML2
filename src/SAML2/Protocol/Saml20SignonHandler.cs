@@ -1,5 +1,6 @@
 using SAML2.Actions;
 using SAML2.Bindings;
+using SAML2.Bindings.SignatureProviders;
 using SAML2.Config;
 using SAML2.Protocol.Pages;
 using SAML2.Schema.Core;
@@ -18,7 +19,6 @@ using System.Text;
 using System.Web;
 using System.Web.Caching;
 using System.Xml;
-using SAML2.Bindings.SignatureProviders;
 
 namespace SAML2.Protocol
 {
@@ -60,17 +60,17 @@ namespace SAML2.Protocol
 
         #region Public methods
 
-            /// <summary>
-            /// Gets the trusted signers.
-            /// </summary>
-            /// <param name="keys">The keys.</param>
-            /// <param name="identityProvider">The identity provider.</param>
-            /// <returns>List of trusted certificate signers.</returns>
-            public static IEnumerable<AsymmetricAlgorithm> GetTrustedSigners(ICollection<KeyDescriptor> keys, IdentityProviderElement identityProvider)
+        /// <summary>
+        /// Gets the trusted signers.
+        /// </summary>
+        /// <param name="keys">The keys.</param>
+        /// <param name="identityProvider">The identity provider.</param>
+        /// <returns>List of trusted certificate signers.</returns>
+        public static IEnumerable<AsymmetricAlgorithm> GetTrustedSigners(ICollection<KeyDescriptor> keys, IdentityProviderElement identityProvider)
         {
             if (keys == null)
             {
-                throw new ArgumentNullException("keys");
+                throw new ArgumentNullException(nameof(keys));
             }
 
             var result = new List<AsymmetricAlgorithm>(keys.Count);
@@ -188,7 +188,7 @@ namespace SAML2.Protocol
         {
             Logger.DebugFormat(TraceMessages.AssertionPrehandlerCalled);
 
-            if (endpoint != null && endpoint.Endpoints.LogoutEndpoint != null && !string.IsNullOrEmpty(endpoint.Endpoints.LogoutEndpoint.TokenAccessor))
+            if (endpoint?.Endpoints.LogoutEndpoint != null && !string.IsNullOrEmpty(endpoint.Endpoints.LogoutEndpoint.TokenAccessor))
             {
                 var idpTokenAccessor = Activator.CreateInstance(Type.GetType(endpoint.Endpoints.LogoutEndpoint.TokenAccessor, false)) as ISaml20IdpTokenAccessor;
                 if (idpTokenAccessor != null)
@@ -219,7 +219,7 @@ namespace SAML2.Protocol
         /// Checks for replay attack.
         /// </summary>
         /// <param name="element">The element.</param>
-        private static void CheckReplayAttack( XmlElement element)
+        private static void CheckReplayAttack(XmlElement element)
         {
             Logger.Debug(TraceMessages.ReplayAttackCheck);
 
@@ -371,7 +371,7 @@ namespace SAML2.Protocol
 
             var issuer = GetIssuer(assertionElement);
             var endp = RetrieveIDPConfiguration(issuer);
-            
+
             PreHandleAssertion(assertionElement, endp);
 
             if (endp?.Metadata == null)
@@ -389,8 +389,8 @@ namespace SAML2.Protocol
                 throw new Saml20Exception(ErrorMessages.AssertionExpired);
             }
 
-            if (!endp.OmitAssertionSignatureCheck )//&& !IsISams(issuer))
-              
+            if (!endp.OmitAssertionSignatureCheck)
+
             {
                 if (endp.Metadata.Keys.Count == 0)
                 {
@@ -430,11 +430,6 @@ namespace SAML2.Protocol
             Logger.DebugFormat(TraceMessages.AssertionParsed, assertion.Id);
 
             DoSignOn(context, assertion);
-        }
-
-        private bool IsISams(string issuer)
-        {
-            return issuer.ToLowerInvariant().Contains("isams");
         }
 
         public static void CheckRSASHA256(XmlElement assertionElement, AsymmetricAlgorithm asymmetricAlgorithm)
@@ -573,7 +568,7 @@ namespace SAML2.Protocol
                 {
                     if (!idp.AllowUnsolicitedResponses)
                     {
-                        CheckReplayAttack( parser.ArtifactResponse.Any);
+                        CheckReplayAttack(parser.ArtifactResponse.Any);
                     }
 
                     var responseStatus = GetStatusElement(parser.ArtifactResponse.Any);

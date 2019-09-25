@@ -1,6 +1,5 @@
 ﻿using System.Configuration;
 
-
 namespace SAML2.Config
 {
     /// <summary>
