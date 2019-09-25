@@ -128,7 +128,6 @@ namespace SAML2.Bindings
                 throw new InvalidOperationException("Query is not signed, so there is no signature to verify.");
             }
 
-
             if (key is RSACryptoServiceProvider)
             {
                 var signatureProvider = SignatureProviderFactory.CreateFromHashingAlgorithmSignatureUri(SignatureAlgorithm);
