@@ -38,7 +38,6 @@ namespace SAML2.Bindings
             var signatureProvider = SignatureProviderFactory.CreateFromShaHashingAlgorithmName(shaHashingAlgorithm);
             signatureProvider.SignAssertion(doc, request.Request.Id, signingCertificate);
             
-            //XmlSignatureUtils.SignDocument(doc, request.Request.Id);
             ArtifactRedirect(destination, index, doc, Context.Request.Params["relayState"]);
         }
 
@@ -63,8 +62,6 @@ namespace SAML2.Bindings
             var config = Saml2Config.GetConfig();
             var index = (short)config.ServiceProvider.Endpoints.LogoutEndpoint.Index;
             var doc = request.GetXml();
-            //  XmlSignatureUtils.SignDocument(doc, request.Request.Id);
-            //  ArtifactRedirect(destination, index, doc, relayState);
             var signingCertificate = Saml2Config.GetConfig().ServiceProvider.SigningCertificate.GetCertificate();
             var shaHashingAlgorithm = SignatureProviderFactory.ValidateShaHashingAlgorithm(Saml2Config.GetConfig().MetaDataShaHashingAlgorithm);
             var signatureProvider = SignatureProviderFactory.CreateFromShaHashingAlgorithmName(shaHashingAlgorithm);
