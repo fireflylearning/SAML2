@@ -15,7 +15,6 @@ namespace SAML2.Config
 
         #region Attributes
 
-
         /// <summary>
         /// Gets or sets a value indicating whether to allow this IDP to send unsolicited responses.
         /// </summary>

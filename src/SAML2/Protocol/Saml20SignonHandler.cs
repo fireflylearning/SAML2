@@ -1,3 +1,13 @@
+using SAML2.Actions;
+using SAML2.Bindings;
+using SAML2.Bindings.SignatureProviders;
+using SAML2.Config;
+using SAML2.Protocol.Pages;
+using SAML2.Schema.Core;
+using SAML2.Schema.Metadata;
+using SAML2.Schema.Protocol;
+using SAML2.Specification;
+using SAML2.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,15 +19,6 @@ using System.Text;
 using System.Web;
 using System.Web.Caching;
 using System.Xml;
-using SAML2.Actions;
-using SAML2.Bindings;
-using SAML2.Config;
-using SAML2.Protocol.Pages;
-using SAML2.Schema.Core;
-using SAML2.Schema.Metadata;
-using SAML2.Schema.Protocol;
-using SAML2.Specification;
-using SAML2.Utils;
 
 namespace SAML2.Protocol
 {
@@ -69,7 +70,7 @@ namespace SAML2.Protocol
         {
             if (keys == null)
             {
-                throw new ArgumentNullException("keys");
+                throw new ArgumentNullException(nameof(keys));
             }
 
             var result = new List<AsymmetricAlgorithm>(keys.Count);
@@ -181,14 +182,13 @@ namespace SAML2.Protocol
         /// <summary>
         /// Is called before the assertion is made into a strongly typed representation
         /// </summary>
-        /// <param name="context">The HttpContext.</param>
         /// <param name="elem">The assertion element.</param>
         /// <param name="endpoint">The endpoint.</param>
-        protected virtual void PreHandleAssertion(HttpContext context, XmlElement elem, IdentityProviderElement endpoint)
+        protected virtual void PreHandleAssertion(XmlElement elem, IdentityProviderElement endpoint)
         {
             Logger.DebugFormat(TraceMessages.AssertionPrehandlerCalled);
 
-            if (endpoint != null && endpoint.Endpoints.LogoutEndpoint != null && !string.IsNullOrEmpty(endpoint.Endpoints.LogoutEndpoint.TokenAccessor))
+            if (endpoint?.Endpoints.LogoutEndpoint != null && !string.IsNullOrEmpty(endpoint.Endpoints.LogoutEndpoint.TokenAccessor))
             {
                 var idpTokenAccessor = Activator.CreateInstance(Type.GetType(endpoint.Endpoints.LogoutEndpoint.TokenAccessor, false)) as ISaml20IdpTokenAccessor;
                 if (idpTokenAccessor != null)
@@ -218,9 +218,8 @@ namespace SAML2.Protocol
         /// <summary>
         /// Checks for replay attack.
         /// </summary>
-        /// <param name="context">The context.</param>
         /// <param name="element">The element.</param>
-        private static void CheckReplayAttack(HttpContext context, XmlElement element)
+        private static void CheckReplayAttack(XmlElement element)
         {
             Logger.Debug(TraceMessages.ReplayAttackCheck);
 
@@ -365,43 +364,58 @@ namespace SAML2.Protocol
         /// Deserializes an assertion, verifies its signature and logs in the user if the assertion is valid.
         /// </summary>
         /// <param name="context">The context.</param>
-        /// <param name="elem">The elem.</param>
-        private void HandleAssertion(HttpContext context, XmlElement elem)
+        /// <param name="assertionElement">The elem.</param>
+        public void HandleAssertion(HttpContext context, XmlElement assertionElement)
         {
-            Logger.DebugFormat(TraceMessages.AssertionProcessing, elem.OuterXml);
+            Logger.DebugFormat(TraceMessages.AssertionProcessing, assertionElement.OuterXml);
 
-            var issuer = GetIssuer(elem);
+            var issuer = GetIssuer(assertionElement);
             var endp = RetrieveIDPConfiguration(issuer);
 
-            PreHandleAssertion(context, elem, endp);
+            PreHandleAssertion(assertionElement, endp);
 
-            if (endp == null || endp.Metadata == null)
+            if (endp?.Metadata == null)
             {
                 Logger.Error(ErrorMessages.AssertionIdentityProviderUnknown);
                 throw new Saml20Exception(ErrorMessages.AssertionIdentityProviderUnknown);
             }
 
             var quirksMode = endp.QuirksMode;
-            var assertion = new Saml20Assertion(elem, null, Saml2Config.GetConfig().AssertionProfile.AssertionValidator, quirksMode);
+            var assertion = new Saml20Assertion(assertionElement, null, Saml2Config.GetConfig().AssertionProfile.AssertionValidator, quirksMode);
 
-            // Check signatures
-            if (!endp.OmitAssertionSignatureCheck)
-            {
-                if (!assertion.CheckSignature(GetTrustedSigners(endp.Metadata.GetKeys(KeyTypes.Signing), endp)))
-                {
-                    Logger.Error(ErrorMessages.AssertionSignatureInvalid);
-                    throw new Saml20Exception(ErrorMessages.AssertionSignatureInvalid);
-                }
-            }
-
-            // Check expiration
             if (assertion.IsExpired)
             {
                 Logger.Error(ErrorMessages.AssertionExpired);
                 throw new Saml20Exception(ErrorMessages.AssertionExpired);
             }
 
-            // Check one time use
+            if (!endp.OmitAssertionSignatureCheck)
+
+            {
+                if (endp.Metadata.Keys.Count == 0)
+                {
+                    string keyNotFound = String.Format(ErrorMessages.KeyNotFound, "Any", endp.Id);
+                    Logger.Error(keyNotFound);
+                    throw new Saml20Exception(keyNotFound);
+                }
+
+                List<KeyDescriptor> keyDescriptors = endp.Metadata.GetKeys(KeyTypes.Signing);
+
+                if (keyDescriptors.Count == 0)
+                {
+                    string keyNotFound = String.Format(ErrorMessages.KeyNotFound, KeyTypes.Signing, endp.Id);
+                    Logger.Error(keyNotFound);
+                    throw new Saml20Exception(keyNotFound);
+                }
+
+                if (!assertion.CheckSignature(GetTrustedSigners(keyDescriptors, endp)))
+                {
+                    Logger.Error(ErrorMessages.AssertionSignatureInvalid);
+
+                    CheckRSASHA256(assertionElement, GetTrustedSigners(keyDescriptors, endp).First());
+                }
+            }
+
             if (assertion.IsOneTimeUse)
             {
                 if (context.Cache[assertion.Id] != null)
@@ -416,6 +430,21 @@ namespace SAML2.Protocol
             Logger.DebugFormat(TraceMessages.AssertionParsed, assertion.Id);
 
             DoSignOn(context, assertion);
+        }
+
+        public static void CheckRSASHA256(XmlElement assertionElement, AsymmetricAlgorithm asymmetricAlgorithm)
+        {
+            var signatureProvider = new RsaSha256SignatureProvider();
+            byte[] data = Encoding.UTF8.GetBytes(assertionElement.ToString());
+            byte[] signature = XmlSignatureUtils.RetrieveSignature(assertionElement).SignatureValue;
+            var verified = signatureProvider.VerifySignature(asymmetricAlgorithm, data, signature);
+
+            if (!verified)
+            {
+                ///////// DIES HERE ////////////////////
+                Logger.Error(ErrorMessages.AssertionSignatureInvalid);
+                throw new Saml20Exception(ErrorMessages.AssertionSignatureInvalid);
+            }
         }
 
         /// <summary>
@@ -465,7 +494,7 @@ namespace SAML2.Protocol
             // Replay attack check
             if (!endpoint.AllowUnsolicitedResponses)
             {
-                CheckReplayAttack(context, doc.DocumentElement);
+                CheckReplayAttack(doc.DocumentElement);
             }
 
             // Check if an encoding-override exists for the IdP endpoint in question
@@ -539,7 +568,7 @@ namespace SAML2.Protocol
                 {
                     if (!idp.AllowUnsolicitedResponses)
                     {
-                        CheckReplayAttack(context, parser.ArtifactResponse.Any);
+                        CheckReplayAttack(parser.ArtifactResponse.Any);
                     }
 
                     var responseStatus = GetStatusElement(parser.ArtifactResponse.Any);
@@ -667,10 +696,10 @@ namespace SAML2.Protocol
                     Logger.DebugFormat(TraceMessages.AuthnRequestPrepared, identityProvider.Id, Saml20Constants.ProtocolBindings.HttpRedirect);
 
                     var redirectBuilder = new HttpRedirectBindingBuilder
-                                      {
-                                          SigningKey = _certificate.PrivateKey,
-                                          Request = request.GetXml().OuterXml
-                                      };
+                    {
+                        SigningKey = _certificate.PrivateKey,
+                        Request = request.GetXml().OuterXml
+                    };
 
                     Logger.DebugFormat(TraceMessages.AuthnRequestSent, redirectBuilder.Request);
 

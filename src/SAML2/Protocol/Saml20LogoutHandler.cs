@@ -180,7 +180,7 @@ namespace SAML2.Protocol
 
                     var req = Serialization.DeserializeFromXmlString<LogoutRequest>(parser.ArtifactResponse.Any.OuterXml);
 
-                    // Send logoutresponse via artifact
+                    // Send logout response via artifact
                     var response = new Saml20LogoutResponse
                                        {
                                            Issuer = config.ServiceProvider.Id,

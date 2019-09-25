@@ -2,17 +2,8 @@
 
 namespace SAML2.Config
 {
-    /// <summary>
-    /// Service Provider Endpoint configuration element.
-    /// </summary>
     public class ServiceProviderEndpointElement : WritableConfigurationElement, IConfigurationElementCollectionElement
     {
-        #region Attributes
-
-        /// <summary>
-        /// Gets or sets the binding.
-        /// </summary>
-        /// <value>The binding.</value>
         [ConfigurationProperty("binding")]
         public BindingType Binding
         {
@@ -20,10 +11,6 @@ namespace SAML2.Config
             set { base["binding"] = value; }
         }
 
-        /// <summary>
-        /// Gets or sets the index.
-        /// </summary>
-        /// <value>The index.</value>
         [ConfigurationProperty("index")]
         public int Index
         {
@@ -31,10 +18,6 @@ namespace SAML2.Config
             set { base["index"] = value; }
         }
 
-        /// <summary>
-        /// Gets or sets the local path.
-        /// </summary>
-        /// <value>The local path.</value>
         [ConfigurationProperty("localPath", IsRequired = true)]
         public string LocalPath
         {
@@ -42,10 +25,6 @@ namespace SAML2.Config
             set { base["localPath"] = value; }
         }
 
-        /// <summary>
-        /// Gets or sets the redirect URL.
-        /// </summary>
-        /// <value>The redirect URL.</value>
         [ConfigurationProperty("redirectUrl")]
         public string RedirectUrl
         {
@@ -53,10 +32,6 @@ namespace SAML2.Config
             set { base["redirectUrl"] = value; }
         }
 
-        /// <summary>
-        /// Gets or sets the type.
-        /// </summary>
-        /// <value>The type.</value>
         [ConfigurationProperty("type", IsKey = true, IsRequired = true)]
         public EndpointType Type
         {
@@ -64,10 +39,6 @@ namespace SAML2.Config
             set { base["type"] = value; }
         }
 
-        /// <summary>
-        /// Gets or sets the option for signing logoutresponses.
-        /// </summary>
-        /// <value>The option value.</value>
         [ConfigurationProperty("signLogoutResponses")]
         public bool SignLogoutResponses
         {
@@ -75,18 +46,11 @@ namespace SAML2.Config
             set { base["signLogoutResponses"] = value; }
         }
 
-        #endregion
-
         #region Implementation of IConfigurationElementCollectionElement
-
-        /// <summary>
-        /// Gets the element key.
-        /// </summary>
         public object ElementKey
         {
             get { return Type; }
         }
-
         #endregion
     }
 }

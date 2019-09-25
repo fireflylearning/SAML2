@@ -4,8 +4,10 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
+using System.Web;
 using System.Xml;
 using SAML2.Config;
+using SAML2.Logging;
 
 namespace SAML2.Utils
 {
@@ -26,7 +28,7 @@ namespace SAML2.Utils
         public static bool CheckSignature(XmlDocument doc)
         {
             CheckDocument(doc);
-            var signedXml = RetrieveSignature(doc);
+            var signedXml = RetrieveSignature(doc.DocumentElement);
 
             if (signedXml.SignatureMethod.Contains("rsa-sha256"))
             {
@@ -57,7 +59,7 @@ namespace SAML2.Utils
         public static bool CheckSignature(XmlDocument doc, AsymmetricAlgorithm alg)
         {
             CheckDocument(doc);
-            var signedXml = RetrieveSignature(doc);
+            var signedXml = RetrieveSignature(doc.DocumentElement);
 
             return signedXml.CheckSignature(alg);
         }
@@ -72,10 +74,15 @@ namespace SAML2.Utils
         /// <exception cref="InvalidOperationException">if the XmlDocument instance does not contain a signed XML element.</exception>
         public static bool CheckSignature(XmlElement el, AsymmetricAlgorithm alg)
         {
-            // CheckDocument(element);
-            var signedXml = RetrieveSignature(el);
+            var signature = RetrieveSignature(el);
+            if (signature.Signature.SignatureValue.Length == 0)
+            {
+                string sigNotFound = String.Format(ErrorMessages.ResponseSignatureMissing);
+                Logger.Error(sigNotFound);
+                throw new Saml20Exception(sigNotFound);
+            }
 
-            var signed = signedXml.CheckSignature(alg);
+            var signed = signature.CheckSignature(alg);
 
             // CheckSignature may have failed due to a .NET bug when validating nodes with nested signatures
             // if the reference URI is canonicalized.  See: https://support.microsoft.com/en-us/kb/952697
@@ -86,14 +93,14 @@ namespace SAML2.Utils
                     // Search all of the signing nodes in the document for the one whose parent is
                     // the element we are interested in
                     XmlDocument doc = el.OwnerDocument;
-
                     XmlNodeList nodeList = doc.GetElementsByTagName(Schema.XmlDSig.Signature.ElementName, Saml20Constants.Xmldsig);
+
                     foreach (XmlElement element in nodeList)
                     {
                         if (element.ParentNode == el)
                         {
                             // Provide SignedXml.LoadXml with a Signature node whose OwnerDocument is the Signature's parent node. 
-                            XmlDocument tempDoc = new XmlDocument() { PreserveWhitespace = true, XmlResolver = null };
+                            XmlDocument tempDoc = new XmlDocument { PreserveWhitespace = true, XmlResolver = null };
                             tempDoc.LoadXml(element.ParentNode.OuterXml);
 
                             SignedXml sxml = new SignedXml(doc);
@@ -112,40 +119,31 @@ namespace SAML2.Utils
             return signed;
         }
 
-        /// <summary>
-        /// Verify the given document using a KeyInfo instance. The KeyInfo instance's KeyClauses will be traversed for
-        /// elements that can verify the signature, e.g. certificates or keys. If nothing is found, an exception is thrown.
-        /// </summary>
-        /// <param name="doc">The doc.</param>
-        /// <param name="keyinfo">The key info.</param>
-        /// <returns><code>true</code> if the element's signature can be verified. <code>false</code> if the signature could
-        /// not be verified.</returns>
+        protected static readonly IInternalLogger Logger = LoggerProvider.LoggerFor(MethodBase.GetCurrentMethod().DeclaringType);
+
         public static bool CheckSignature(XmlDocument doc, KeyInfo keyinfo)
         {
             CheckDocument(doc);
-            var signedXml = RetrieveSignature(doc);            
+            var signedXml = RetrieveSignature(doc.DocumentElement);            
 
             AsymmetricAlgorithm alg = null;
             X509Certificate2 cert = null;
             foreach (KeyInfoClause clause in keyinfo)
             {
-                if (clause is RSAKeyValue)
+                if (clause is RSAKeyValue rsaKeyValue)
                 {
-                    var key = (RSAKeyValue)clause;
-                    alg = key.Key;
+                    alg = rsaKeyValue.Key;
                     break;
                 }
                 
-                if (clause is KeyInfoX509Data)
+                if (clause is KeyInfoX509Data x509Data)
                 {
-                    var x509Data = (KeyInfoX509Data)clause;
                     var count = x509Data.Certificates.Count;
                     cert = (X509Certificate2)x509Data.Certificates[count - 1];                    
                 } 
-                else if (clause is DSAKeyValue)
+                else if (clause is DSAKeyValue dsaKeyValue)
                 {
-                    var key = (DSAKeyValue)clause;
-                    alg = key.Key;
+                    alg = dsaKeyValue.Key;
                     break;
                 }                
             }
@@ -158,40 +156,27 @@ namespace SAML2.Utils
             return alg != null ? signedXml.CheckSignature(alg) : signedXml.CheckSignature(cert, true);
         }
 
-        /// <summary>
-        /// Attempts to retrieve an asymmetric key from the KeyInfoClause given as parameter.
-        /// </summary>
-        /// <param name="keyInfoClause">The key info clause.</param>
-        /// <returns>null if the key could not be found.</returns>
         public static AsymmetricAlgorithm ExtractKey(KeyInfoClause keyInfoClause)
         {
-            if (keyInfoClause is RSAKeyValue)
+            if (keyInfoClause is RSAKeyValue rsaKeyValue)
             {
-                var key = (RSAKeyValue)keyInfoClause;
-                return key.Key;                
+                return rsaKeyValue.Key;                
             }
             
-            if (keyInfoClause is KeyInfoX509Data)
+            if (keyInfoClause is KeyInfoX509Data infoX509Data)
             {
-                var cert = GetCertificateFromKeyInfo((KeyInfoX509Data)keyInfoClause);
-                return cert != null ? cert.PublicKey.Key : null;
+                var cert = GetCertificateFromKeyInfo(infoX509Data);
+                return cert?.PublicKey.Key;
             }
             
-            if (keyInfoClause is DSAKeyValue)
+            if (keyInfoClause is DSAKeyValue dsaKeyValue)
             {
-                var key = (DSAKeyValue)keyInfoClause;
-                return key.Key;                
+                return dsaKeyValue.Key;                
             }
 
             return null;
         }
 
-        /// <summary>
-        /// Returns the KeyInfo element that is included with the signature in the document.
-        /// </summary>
-        /// <param name="doc">The doc.</param>
-        /// <returns>The signature <see cref="KeyInfo"/>.</returns>
-        /// <exception cref="InvalidOperationException">if the document is not signed.</exception>
         public static KeyInfo ExtractSignatureKeys(XmlDocument doc)
         {
             CheckDocument(doc);
@@ -213,12 +198,6 @@ namespace SAML2.Utils
             return null;
         }
 
-        /// <summary>
-        /// Returns the KeyInfo element that is included with the signature in the element.
-        /// </summary>
-        /// <param name="element">The element.</param>
-        /// <returns>The signature <see cref="KeyInfo"/>.</returns>
-        /// <exception cref="InvalidOperationException">if the document is not signed.</exception>
         public static KeyInfo ExtractSignatureKeys(XmlElement element)
         {
             CheckDocument(element);
@@ -323,10 +302,7 @@ namespace SAML2.Utils
 
                 // doc.DocumentElement.InsertAfter(doc.ImportNode(signedXml.GetXml(), true), nodes[0]);
                 var parentNode = nodes[0].ParentNode;
-                if (parentNode != null)
-                {
-                    parentNode.InsertAfter(doc.ImportNode(signedXml.GetXml(), true), nodes[0]);
-                }
+                parentNode?.InsertAfter(doc.ImportNode(signedXml.GetXml(), true), nodes[0]);
             }
         }
 
@@ -403,25 +379,14 @@ namespace SAML2.Utils
         /// <summary>
         /// Digs the &lt;Signature&gt; element out of the document.
         /// </summary>
-        /// <param name="doc">The doc.</param>
-        /// <returns>The <see cref="SignedXml"/>.</returns>
-        /// <exception cref="InvalidOperationException">if the document does not contain a signature.</exception>
-        private static SignedXml RetrieveSignature(XmlDocument doc)
-        {
-            return RetrieveSignature(doc.DocumentElement);
-        }
-
-        /// <summary>
-        /// Digs the &lt;Signature&gt; element out of the document.
-        /// </summary>
         /// <param name="el">The element.</param>
         /// <returns>The <see cref="SignedXml"/>.</returns>
         /// <exception cref="InvalidOperationException">if the document does not contain a signature.</exception>
-        private static SignedXml RetrieveSignature(XmlElement el)
+        internal static SignedXml RetrieveSignature(XmlElement el)
         {
-            if (el.OwnerDocument.DocumentElement == null)
+            if (el.OwnerDocument != null && el.OwnerDocument.DocumentElement == null)
             {
-                var doc = new XmlDocument() { PreserveWhitespace = true };
+                var doc = new XmlDocument { PreserveWhitespace = true };
                 doc.LoadXml(el.OuterXml);
                 el = doc.DocumentElement;
             }
@@ -430,20 +395,18 @@ namespace SAML2.Utils
             var nodeList = el.GetElementsByTagName(Schema.XmlDSig.Signature.ElementName, Saml20Constants.Xmldsig);
             if (nodeList.Count == 0)
             {
-                throw new InvalidOperationException("Document does not contain a signature to verify.");
+                throw new InvalidOperationException("Document does not contain a signature to verify." + " XmlElement: " + HttpUtility.HtmlEncode(el.OuterXml));
             }
 
             signedXml.LoadXml((XmlElement)nodeList[0]);
 
             // To support SHA256 for XML signatures, an additional algorithm must be enabled.
-            // This is not supported in .Net versions older than 4.0. In older versions,
-            // an exception will be raised if an SHA256 signature method is attempted to be used.
             if (signedXml.SignatureMethod.Contains("rsa-sha256"))
             {
                 var addAlgorithmMethod = typeof(CryptoConfig).GetMethod("AddAlgorithm", BindingFlags.Public | BindingFlags.Static);
                 if (addAlgorithmMethod == null)
                 {
-                    throw new InvalidOperationException("This version of .Net does not support CryptoConfig.AddAlgorithm. Enabling sha256 not psosible.");
+                    throw new InvalidOperationException("This version of .Net (pre-4.0) does not support CryptoConfig.AddAlgorithm. Enabling sha256 not psosible.");
                 }
 
                 addAlgorithmMethod.Invoke(null, new object[] { typeof(RSAPKCS1SHA256SignatureDescription), new[] { signedXml.SignatureMethod } });
@@ -562,21 +525,21 @@ namespace SAML2.Utils
                 {
                     var nl = document.GetElementsByTagName("*");
                     var enumerator = nl.GetEnumerator();
-                    while (enumerator != null && enumerator.MoveNext())
+                    while (enumerator.MoveNext())
                     {
                         var node = (XmlNode)enumerator.Current;
-                        if (node == null || node.Attributes == null)
+                        if (node?.Attributes == null)
                         {
                             continue;
                         }
 
                         var nodeEnum = node.Attributes.GetEnumerator();
-                        while (nodeEnum != null && nodeEnum.MoveNext())
+                        while (nodeEnum.MoveNext())
                         {
                             var attr = (XmlAttribute)nodeEnum.Current;
-                            if (attr != null && (attr.LocalName.ToLower() == "id" && attr.Value == idValue && node is XmlElement))
+                            if (attr != null && (attr.LocalName.ToLower() == "id" && attr.Value == idValue && node is XmlElement element))
                             {
-                                return (XmlElement)node;
+                                return element;
                             }
                         }
                     }
