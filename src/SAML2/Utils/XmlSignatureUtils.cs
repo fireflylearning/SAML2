@@ -7,6 +7,8 @@ using System.Security.Cryptography.Xml;
 using System.Web;
 using System.Xml;
 using SAML2.Config;
+using SAML2.Logging;
+using SAML2.Schema.Metadata;
 
 namespace SAML2.Utils
 {
@@ -74,6 +76,12 @@ namespace SAML2.Utils
         public static bool CheckSignature(XmlElement el, AsymmetricAlgorithm alg)
         {
             var signature = RetrieveSignature(el);
+            if (signature.Signature.SignatureValue.Length == 0)
+            {
+                string sigNotFound = String.Format(ErrorMessages.ResponseSignatureMissing);
+                Logger.Error(sigNotFound);
+                throw new Saml20Exception(sigNotFound);
+            }
 
             var signed = signature.CheckSignature(alg);
 
@@ -111,6 +119,8 @@ namespace SAML2.Utils
 
             return signed;
         }
+
+        protected static readonly IInternalLogger Logger = LoggerProvider.LoggerFor(MethodBase.GetCurrentMethod().DeclaringType);
 
         public static bool CheckSignature(XmlDocument doc, KeyInfo keyinfo)
         {

@@ -389,7 +389,7 @@ namespace SAML2.Protocol
                 throw new Saml20Exception(ErrorMessages.AssertionExpired);
             }
 
-            if (!endp.OmitAssertionSignatureCheck && !IsISams(issuer))
+            if (!endp.OmitAssertionSignatureCheck )//&& !IsISams(issuer))
               
             {
                 if (endp.Metadata.Keys.Count == 0)
