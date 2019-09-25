@@ -193,8 +193,6 @@ namespace SAML2.Bindings
             }
 
             // Calculate the signature of the URL as described in [SAMLBind] section 3.4.4.1.
-                  
-            
             result.AppendFormat("&{0}=", HttpRedirectBindingConstants.Signature);
             result.Append(HttpUtility.UrlEncode(Convert.ToBase64String(signature)));
         }
