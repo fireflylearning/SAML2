@@ -32,8 +32,6 @@ namespace SAML2.Bindings
         /// </summary>
         private AsymmetricAlgorithm _signingKey;
 
-
-
         /// <summary>
         /// Gets or sets the request.
         /// </summary>
@@ -49,7 +47,6 @@ namespace SAML2.Bindings
                 }
 
                 _request = value;
-               
             }
         }
 
