@@ -66,15 +66,15 @@
     <Compile Include="Bindings\HttpRedirectBindingBuilder.cs" />
     <Compile Include="Bindings\HttpRedirectBindingConstants.cs" />
     <Compile Include="Bindings\HttpRedirectBindingParser.cs" />
-    <Compile Include="Bindings\HttpSoapBindingBuilder.cs" />
-    <Compile Include="Bindings\HttpSoapBindingParser.cs" />
+    <Compile Include="Bindings\HttpSOAPBindingBuilder.cs" />
+    <Compile Include="Bindings\HttpSOAPBindingParser.cs" />
     <Compile Include="Bindings\SignatureProviders\ISignatureProvider.cs" />
     <Compile Include="Bindings\SignatureProviders\RsaSha1SignatureProvider.cs" />
     <Compile Include="Bindings\SignatureProviders\RsaSha256SignatureProvider.cs" />
     <Compile Include="Bindings\SignatureProviders\RsaSha512SignatureProvider.cs" />
     <Compile Include="Bindings\SignatureProviders\SignatureProvider.cs" />
     <Compile Include="Bindings\SignatureProviders\SignatureProviderFactory.cs" />
-    <Compile Include="Bindings\SoapConstants.cs" />
+    <Compile Include="Bindings\SOAPConstants.cs" />
     <Compile Include="Config\ActionCollection.cs" />
     <Compile Include="Config\ISaml2ConfigProvider.cs" />
     <Compile Include="Config\ShaHashingAlgorithm.cs" />
@@ -147,7 +147,7 @@
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Protocol\Saml20AbstractEndpointHandler.cs" />
-    <Compile Include="Protocol\Saml20CDCIdpReturnPoint.cs" />
+    <Compile Include="Protocol\Saml20CDCIdPReturnPoint.cs" />
     <Compile Include="Protocol\Saml20CDCReader.cs" />
     <Compile Include="Protocol\Saml20LogoutHandler.cs" />
     <Compile Include="Protocol\Saml20MetadataHandler.cs" />
@@ -214,7 +214,7 @@
     <Compile Include="Schema\Metadata\IndexedEndpoint.cs" />
     <Compile Include="Schema\Metadata\KeyDescriptor.cs" />
     <Compile Include="Schema\Metadata\LocalizedName.cs" />
-    <Compile Include="Schema\Metadata\LocalizedURI.cs" />
+    <Compile Include="Schema\Metadata\LocalizedUri.cs" />
     <Compile Include="Schema\Metadata\Organization.cs" />
     <Compile Include="Schema\Metadata\PdpDescriptor.cs" />
     <Compile Include="Schema\Metadata\RequestedAttribute.cs" />
@@ -313,7 +313,7 @@
     <Compile Include="Utils\XmlSignatureUtils.cs" />
     <Compile Include="Validation\ISaml20AssertionValidator.cs" />
     <Compile Include="Validation\ISaml20AttributeValidator.cs" />
-    <Compile Include="Validation\ISaml20NameIdValidator.cs" />
+    <Compile Include="Validation\ISaml20NameIDValidator.cs" />
     <Compile Include="Validation\ISaml20StatementValidator.cs" />
     <Compile Include="Validation\ISaml20SubjectConfirmationDataValidator.cs" />
     <Compile Include="Validation\ISaml20SubjectConfirmationValidator.cs" />
@@ -322,7 +322,7 @@
     <Compile Include="Validation\Saml20AttributeValidator.cs" />
     <Compile Include="Validation\Saml20EncryptedElementValidator.cs" />
     <Compile Include="Validation\Saml20KeyInfoValidator.cs" />
-    <Compile Include="Validation\Saml20NameIdValidator.cs" />
+    <Compile Include="Validation\Saml20NameIDValidator.cs" />
     <Compile Include="Validation\Saml20StatementValidator.cs" />
     <Compile Include="Validation\Saml20SubjectConfirmationDataValidator.cs" />
     <Compile Include="Validation\Saml20SubjectConfirmationValidator.cs" />
