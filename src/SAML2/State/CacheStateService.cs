@@ -2,6 +2,7 @@
 using System.Web;
 using System.Web.Caching;
 using System.Web.Security;
+using SAML2.Protocol;
 
 namespace SAML2.State
 {
@@ -196,31 +197,25 @@ namespace SAML2.State
         /// <returns>The cache key prefix.</returns>
         private string GetCacheKeyPrefix(HttpContext context)
         {
-            var prefix = string.Empty;
-
             var cookie = context.Request.Cookies[CookieName];
             if (cookie != null && !string.IsNullOrEmpty(cookie.Value))
             {
-                prefix = GetDecryptedTicketValue(cookie.Value);
+                return GetDecryptedTicketValue(cookie.Value);
             }
 
-            if (string.IsNullOrEmpty(prefix))
-            {
-                prefix = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
-            }
-
+            var prefix = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
             var expiration = DateTime.UtcNow.AddMinutes(_cacheExpiration);
             var cookieValue = GetEncryptedTicket(prefix, expiration);
 
             // Poor mans sliding expiration cookie reissue
             cookie = new HttpCookie(CookieName)
-                {
-                    Value = cookieValue,
-                    Expires = expiration,
-                    HttpOnly = true,
-                    Secure = true
-                };
-            
+             {
+                 Value = cookieValue,
+                 Expires = expiration,
+                 HttpOnly = true,
+                 Secure = true
+             };
+        
             // Hack to support SameSite as SAML POST flow fails this check
             if (DisallowsSameSiteNone(context.Request.UserAgent) == false)
             {
