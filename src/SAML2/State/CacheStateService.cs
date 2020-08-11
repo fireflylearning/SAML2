@@ -39,7 +39,7 @@ namespace SAML2.State
         /// Initializes a new instance of the <see cref="CacheStateService" /> class.
         /// </summary>
         /// <param name="context">The context.</param>
-        public CacheStateService(HttpContext context)
+        private CacheStateService(HttpContext context)
         {
             _context = context;
         }
