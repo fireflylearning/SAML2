@@ -19,7 +19,7 @@ namespace SAML2.Protocol
         /// <summary>
         /// State Service instance
         /// </summary>
-        protected static readonly IInternalStateService StateService = StateServiceProvider.StateServiceFor(MethodBase.GetCurrentMethod().DeclaringType);
+        protected static IInternalStateService StateService => StateServiceProvider.StateServiceFor(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Gets or sets the redirect URL.

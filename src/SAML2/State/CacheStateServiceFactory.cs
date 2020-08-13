@@ -15,7 +15,7 @@ namespace SAML2.State
         /// <summary>
         /// Cache state service instance.
         /// </summary>
-        private static readonly IInternalStateService CacheStateService = new CacheStateService(HttpContext.Current, Saml2Config.GetConfig().State.Settings.FirstOrDefault(x => x.Name == "cacheExpiration").Value);
+        private IInternalStateService CacheStateService => new CacheStateService(HttpContext.Current, Saml2Config.GetConfig().State.Settings.FirstOrDefault(x => x.Name == "cacheExpiration")?.Value);
 
         #endregion
 

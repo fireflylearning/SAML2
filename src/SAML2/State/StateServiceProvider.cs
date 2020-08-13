@@ -34,8 +34,15 @@ namespace SAML2.State
         static StateServiceProvider()
         {
             var stateServiceClass = Saml2Config.GetConfig().State.StateServiceFactory;
-            var stateServiceFactory = string.IsNullOrEmpty(stateServiceClass) ? new SessionStateServiceFactory() : GetStateServiceFactory(stateServiceClass);
-            SetStateServiceFactory(stateServiceFactory);
+
+            if (Saml2Config.GetConfig().State != null && !string.IsNullOrEmpty(stateServiceClass))
+            {
+                SetStateServiceFactory(GetStateServiceFactory(stateServiceClass));
+            }
+            else
+            {
+                SetStateServiceFactory(new CacheStateServiceFactory());
+            }
         }
 
         /// <summary>

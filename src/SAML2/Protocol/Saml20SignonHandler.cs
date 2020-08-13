@@ -248,6 +248,9 @@ namespace SAML2.Protocol
             }
 
             Logger.Debug(TraceMessages.ReplaceAttackCheckCleared);
+
+            // Clear InResponseTo once its checked
+            StateService.Remove(ExpectedInResponseToSessionKey);
         }
 
         /// <summary>
