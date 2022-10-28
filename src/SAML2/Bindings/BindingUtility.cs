@@ -12,9 +12,8 @@ namespace SAML2.Bindings
         /// Validates the SAML20Federation configuration.
         /// </summary>
         /// <returns>True if validation passes, false otherwise</returns>
-        public static bool ValidateConfiguration()
+        public static void ValidateConfiguration(Saml2Section config)
         {
-            var config = Saml2Config.GetConfig();
             if (config == null)
             {
                 throw new ConfigurationErrorsException(ErrorMessages.ConfigMissingSaml2Element);
@@ -52,7 +51,7 @@ namespace SAML2.Bindings
                 throw new ConfigurationErrorsException(ErrorMessages.ConfigMissingMetadataLocation);
             }
 
-            return true;
+            config.MarkAsValidated();
         }
     }
 }

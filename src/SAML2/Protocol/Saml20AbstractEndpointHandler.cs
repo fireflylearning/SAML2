@@ -56,11 +56,6 @@ namespace SAML2.Protocol
         public const string IdpTempSessionKey = "TempIDPId";
 
         /// <summary>
-        /// Gets or sets a value indicating whether configuration has been validated
-        /// </summary>
-        public static bool Validated { get; set; }
-
-        /// <summary>
         /// Enables processing of HTTP Web requests by a custom HttpHandler that implements the <see cref="T:System.Web.IHttpHandler"/> interface.
         /// </summary>
         /// <param name="context">An <see cref="T:System.Web.HttpContext"/> object that provides references to the intrinsic server objects (for example, Request, Response, Session, and Server) used to service HTTP requests.</param>
@@ -216,12 +211,13 @@ namespace SAML2.Protocol
         /// </summary>
         private void CheckConfiguration()
         {
-            if (Validated)
+            var config = Saml2Config.GetConfig();
+            if (config.IsValidated)
             {
                 return;
             }
 
-            Validated = BindingUtility.ValidateConfiguration();
+            BindingUtility.ValidateConfiguration(config);
         }
     }
 }
