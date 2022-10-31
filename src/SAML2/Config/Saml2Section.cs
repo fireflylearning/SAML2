@@ -144,5 +144,16 @@ namespace SAML2.Config
         {
             return false;
         }
+
+        public bool IsValidated { get; private set; } = false;
+
+        /// <summary>
+        /// Set the IsValidated flag to true.
+        /// 
+        /// Written like this to enforce the requirement that IsValidated can never be updated to 'false'
+        /// Allowing this to be falsified compromises thread safety.
+        /// </summary>
+        public void MarkAsValidated() => IsValidated = true;
+
     }
 }
