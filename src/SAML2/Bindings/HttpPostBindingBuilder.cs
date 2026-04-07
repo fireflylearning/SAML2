@@ -90,8 +90,9 @@ namespace SAML2.Bindings
         /// <summary>
         /// Gets the ASP.Net page that will serve html to user agent.
         /// </summary>
+        /// <param name="cspNonce"></param>
         /// <returns>The Page.</returns>
-        public Page GetPage()
+        public Page GetPage(string cspNonce)
         {
             if (_request == null && _response == null)
             {
@@ -112,7 +113,7 @@ namespace SAML2.Bindings
             var head = new HtmlHead { Title = "SAML2.0 POST binding" };
             p.Controls.Add(head);            
 
-            p.Controls.Add(new LiteralControl(Environment.NewLine + "<body onload=\"document.forms[0].submit()\">" + Environment.NewLine));
+            p.Controls.Add(new LiteralControl(Environment.NewLine + "<body>" + Environment.NewLine));
             p.Controls.Add(new LiteralControl("<noscript><p><strong>Note:</strong> Since your browser does not support JavaScript, you must press the Continue button once to proceed.</p></noscript>"));                                   
 
             p.Controls.Add(new LiteralControl("<form action=\"" + _destinationEndpoint.Url + "\" method=\"post\"><div>"));
@@ -137,7 +138,10 @@ namespace SAML2.Bindings
             p.Controls.Add(action);
 
             p.Controls.Add(new LiteralControl("<noscript><div><input type=\"submit\" value=\"Continue\"/></div></noscript>"));
-            p.Controls.Add(new LiteralControl("</div></form>"));                                      
+            p.Controls.Add(new LiteralControl("</div></form>"));
+
+            var nonceString = string.IsNullOrEmpty(cspNonce) ? "" : $" nonce={cspNonce}";
+            p.Controls.Add(new LiteralControl(Environment.NewLine + $"<script{nonceString}>document.forms[0].submit();</script>"));
             p.Controls.Add(new LiteralControl(Environment.NewLine + "</body>" + Environment.NewLine + "</html>"));
 
             return p;

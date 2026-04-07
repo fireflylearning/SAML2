@@ -363,7 +363,8 @@ namespace SAML2.Protocol
                 XmlSignatureUtils.SignDocument(responseDocument, response.Id);
                 builder.Response = responseDocument.OuterXml;
                 builder.RelayState = context.Request.Params["RelayState"];
-                builder.GetPage().ProcessRequest(context);
+                var cspNonce = HttpContext.Current.Items["CSP-Script-Nonce"] as string;
+                builder.GetPage(cspNonce).ProcessRequest(context);
             }
         }
 
@@ -484,7 +485,8 @@ namespace SAML2.Protocol
 
                 Logger.DebugFormat(TraceMessages.LogoutRequestSent, idp.Id, "POST", builder.Request);
 
-                builder.GetPage().ProcessRequest(context);
+                var cspNonce = HttpContext.Current.Items["CSP-Script-Nonce"] as string;
+                builder.GetPage(cspNonce).ProcessRequest(context);
                 context.Response.End();
                 return;
             }

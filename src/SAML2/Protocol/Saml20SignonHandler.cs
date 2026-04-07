@@ -727,7 +727,8 @@ namespace SAML2.Protocol
 
                     Logger.DebugFormat(TraceMessages.AuthnRequestSent, postBuilder.Request);
 
-                    postBuilder.GetPage().ProcessRequest(context);
+                    var cspNonce = HttpContext.Current.Items["CSP-Script-Nonce"] as string;
+                    postBuilder.GetPage(cspNonce).ProcessRequest(context);
                     break;
                 case BindingType.Artifact:
                     Logger.DebugFormat(TraceMessages.AuthnRequestPrepared, identityProvider.Id, Saml20Constants.ProtocolBindings.HttpArtifact);
